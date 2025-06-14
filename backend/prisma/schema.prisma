@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  PLAYER
+}
+
+model Users {
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  username  String        @unique
+  password  String
+  role      UserRole
+  stats     BattleStats[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  Battle    Battles[]
+}
+
+model Battles {
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  startAt           DateTime
+  endAt             DateTime
+  winnerId          String?       @db.Uuid
+  resultsCalculated Boolean       @default(false)
+  winner            Users?        @relation(fields: [winnerId], references: [id])
+  stats             BattleStats[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([endAt])
+  @@index([winnerId])
+  @@index([createdAt])
+}
+
+model BattleStats {
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  battleId String @db.Uuid
+  userId   String @db.Uuid
+  tapCount Int    @default(0)
+  score    Int    @default(0)
+
+  battle Battles @relation(fields: [battleId], references: [id])
+  user   Users   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([battleId, userId])
+  @@index([userId, battleId])
+}
