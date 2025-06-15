@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/infrastructure/auth/guards/jwt-auth.guard';
 import {
@@ -47,7 +48,7 @@ export class StatsController {
       const statusCode = (() => {
         switch (result.type) {
           case 'BattleNotFound':
-            return HttpStatus.NOT_FOUND;
+            throw NotFoundException;
           case 'BattleNotReady':
             return HttpStatus.NO_CONTENT;
           default:
